@@ -1,0 +1,704 @@
+/* General Styles */
+@font-face {
+    font-family: 'TestTiemposFine-Light';
+    src: url('Assets/TestTiemposFine-Light.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+:root {
+    --panel-bg-light: #fff;
+    --panel-border-light: #ddd;
+    --text-color-light: #333;
+    --input-bg-light: #f9f9f9;
+    --input-border-light: #ccc;
+
+    --panel-bg-dark: #2b2b2b;
+    --panel-border-dark: #555;
+    --text-color-dark: #e0e0e0;
+    --input-bg-dark: #3c3c3c;
+    --input-border-dark: #666;
+}
+
+body {
+    font-family: 'TestTiemposFine-Light', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #FFFBEA, #FFEAD0); /* Default to new Off-White */
+    color: var(--text-color-light);
+    transition: background 0.5s ease, color 0.5s ease, background-position 0.2s ease-out; /* Smooth theme switch */
+    min-height: 100vh;
+    box-sizing: border-box;
+    display: flex; /* For centering app-container */
+    align-items: flex-start; /* Align app-container to top */
+    justify-content: center; /* Center app-container */
+    background-size: 300% 300%; /* For moving gradient */
+    background-position: 50% 50%; /* Initial position */
+}
+
+/* General Anchor Styles */
+a {
+    color: inherit; /* Inherit color from parent element */
+    text-decoration: none; /* Remove default underline */
+    transition: opacity 0.2s ease, text-decoration-color 0.2s ease; /* Smooth transition for hover/focus effects */
+}
+
+a:hover,
+a:focus {
+    opacity: 0.8; /* Slightly reduce opacity on hover/focus */
+    text-decoration: underline; /* Add underline on hover/focus for clarity */
+    text-decoration-color: currentColor; /* Ensure underline color matches text color */
+}
+
+.app-container {
+    display: flex;
+    gap: 20px;
+    max-width: 1400px; /* Max width of the whole app */
+    width: 100%; /* Take full width up to max-width */
+}
+
+.left-pane {
+    flex: 2; 
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 400px; /* Minimum width for left pane */
+}
+
+.right-pane { 
+    flex: 3; 
+    display: flex; 
+    min-width: 300px; /* Minimum width for right pane */
+}
+
+.panel {
+    background-color: var(--panel-bg-light);
+    border: 1px solid var(--panel-border-light);
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Specific Panel Styling from Image */
+#about { 
+    border-radius: 8px; 
+}
+
+/* Style for the new Quick Tips panel */
+#quick-tips {
+    border-radius: 8px; /* Match other panels */
+    padding: 20px; /* Ensure consistent padding */
+}
+
+.middle-content-area {
+    display: flex;
+    gap: 20px;
+    align-items: stretch; 
+}
+
+.middle-left-column {
+    flex: 1.5; /* Adjusted for better proportion based on image */
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+#letter-writer { 
+    border-radius: 8px;
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+}
+#letter-writer textarea {
+    flex-grow: 1;
+    min-height: 150px; /* Increased min-height */
+    border-radius: 4px;
+    border: 1px solid var(--input-border-light);
+    background-color: var(--input-bg-light);
+    color: var(--text-color-light);
+    padding: 10px;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+#theme-selector { 
+    border-radius: 8px; /* Small square, regular radius */
+    min-height: 120px; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.theme-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+    max-width: 200px; /* Max width for buttons container */
+}
+.theme-buttons button {
+    padding: 10px;
+    border: 1px solid var(--input-border-light);
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    /* Updated transition to include background, border-color and smooth easing */
+    transition: background 0.4s ease, color 0.4s ease, border-color 0.4s ease, transform 0.1s ease, box-shadow 0.2s ease;
+}
+.theme-buttons button:hover {
+    transform: translateY(-1px);
+}
+.theme-buttons button:active {
+    transform: translateY(0px);
+}
+
+
+#letter-options { 
+    border-radius: 8px; /* Taller rectangle, regular radius */
+    flex: 1; 
+    display: flex;
+    flex-direction: column;
+    /* justify-content: space-around; Removed for more control */
+    gap: 20px; /* Increased gap for better separation */
+}
+#letter-options div { /* Target the divs wrapping label/select */
+    margin-bottom: 10px; /* Add some space below each option group */
+}
+#letter-options label {
+    display: block;
+    margin-bottom: 8px; /* Increased space below label */
+    font-weight: 500;
+    color: var(--text-color-light); /* Ensure text color respects themes */
+}
+#letter-options select, 
+#letter-options button { /* Combined for common properties */
+    width: 100%;
+    padding: 12px 15px; /* Adjusted padding for a modern feel */
+    border-radius: 6px; /* Slightly more rounded corners */
+    border: 1px solid var(--input-border-light);
+    background-color: var(--input-bg-light);
+    color: var(--text-color-light);
+    box-sizing: border-box;
+    font-size: 1rem; /* Standardized font size */
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.2s ease;
+    appearance: none; /* Remove default system appearance for select */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E"); /* Custom arrow for select */
+    background-repeat: no-repeat;
+    background-position: right 15px center;
+    background-size: 16px 12px;
+}
+
+#letter-options select:focus,
+#letter-options button:focus {
+    outline: none;
+    border-color: #007bff; /* Highlight color on focus, can be themed */
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25); /* Glow effect on focus */
+}
+
+#create-letter-btn {
+    background-color: #007bff; /* Primary button color */
+    color: white;
+    cursor: pointer;
+    font-weight: 500;
+    border: none;
+    margin-top: 10px; /* Add space above the button */
+}
+#create-letter-btn:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+
+#secret-info { 
+    border-radius: 20px; /* More rounded */
+}
+
+#letter-display { 
+    border-radius: 25px; /* Most rounded */
+    display: flex; 
+    flex-direction: column;
+}
+#letter-output {
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+#actual-letter-content {
+    flex-grow: 1;
+    border: 1px dashed #e0e0e0;
+    padding: 15px;
+    overflow-y: auto;
+    white-space: pre-wrap; 
+    background-color: #fdfdfd;
+    border-radius: 6px;
+    min-height: 200px; /* Ensure it has some height */
+    line-height: 1.6;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+#share-link-container input[type="text"] {
+    width: calc(100% - 120px); 
+    padding: 10px;
+    margin-right: 10px;
+    border: 1px solid var(--input-border-light);
+    background-color: var(--input-bg-light);
+    color: var(--text-color-light);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+#copy-link-btn {
+    padding: 10px 15px;
+    border: 1px solid var(--input-border-light);
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+#message-status {
+    margin-top: 10px;
+    font-size: 0.9em;
+    min-height: 1.2em; /* Reserve space */
+}
+
+/* Envelope Animation Styles */
+/*
+#envelope-container {
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    padding: 20px 0; 
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.envelope-wrapper {
+    perspective: 1000px; 
+    position: relative;
+}
+
+.envelope {
+    position: relative;
+    width: 300px; 
+    height: 200px; 
+    background-color: #e0e0e0; 
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    
+}
+
+.envelope-flap {
+    position: absolute;
+    width: 100%;
+    height: 50%; 
+    background-color: #d0d0d0; 
+    border: 1px solid #c0c0c0;
+    box-sizing: border-box;
+    transform-origin: top center; 
+}
+
+.envelope-flap.front {
+    top: 0;
+    left: 0;
+    border-radius: 5px 5px 0 0;
+    
+    clip-path: polygon(0% 0%, 100% 0%, 50% 100%);
+    
+    transform: rotateX(0deg);
+    z-index: 3;
+    background-color: #cccccc; 
+}
+
+.envelope-flap.back {
+    top: 0; 
+    left: 0;
+    height: 100px; 
+    border-radius: 5px 5px 0 0;
+    background-color: #e0e0e0; 
+    z-index: 1; 
+}
+
+.envelope-letter {
+    position: absolute;
+    top: 5px; 
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    background-color: #fff; 
+    border: 1px solid #f0f0f0;
+    overflow: hidden; 
+    z-index: 2; 
+    padding: 15px;
+    box-sizing: border-box;
+    
+    transform: translateY(80px) scaleY(0.3); 
+    transform-origin: top center;
+    opacity: 0; 
+    color: #333; 
+    font-size: 0.9em;
+    line-height: 1.4;
+}
+*/
+
+/* Helper to hide normal letter options */
+#normal-letter-options.hidden {
+    display: none;
+}
+
+/* --- Theme: Blue --- */
+body.theme-blue {
+    background: linear-gradient(135deg, #6DD5FA, #2980B9);
+    color: #f0f0f0;
+}
+body.theme-blue .panel {
+    background-color: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.25);
+    color: #f0f0f0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+body.theme-blue #letter-writer textarea,
+body.theme-blue #letter-options select,
+body.theme-blue #share-link-container input[type="text"] {
+    background-color: rgba(0,0,0,0.2);
+    color: #f0f0f0;
+    border-color: rgba(255,255,255,0.2);
+}
+body.theme-blue #letter-options select option {
+    background-color: rgba(0,0,0,0.8);
+    color: #f0f0f0;
+}
+body.theme-blue ::placeholder { color: rgba(240,240,240,0.6); }
+body.theme-blue #create-letter-btn,
+body.theme-blue .theme-buttons button,
+body.theme-blue #copy-link-btn {
+    background-color: #2980B9;
+    color: #fff;
+    border-color: #6DD5FA;
+}
+body.theme-blue #create-letter-btn:hover,
+body.theme-blue .theme-buttons button:hover,
+body.theme-blue #copy-link-btn:hover {
+    background-color: #6DD5FA;
+    color: #2980B9;
+    border-color: #2980B9; /* Ensure hover border color matches theme */
+}
+body.theme-blue #actual-letter-content {
+    background-color: rgba(0,0,0,0.15);
+    border-color: rgba(255,255,255,0.2);
+}
+
+/* --- Theme: Red --- */
+body.theme-red {
+    background: linear-gradient(135deg, #FF5F6D, #FFC371);
+    color: #fff;
+}
+body.theme-red .panel {
+    background-color: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.3);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+body.theme-red #letter-writer textarea,
+body.theme-red #letter-options select,
+body.theme-red #share-link-container input[type="text"] {
+    background-color: rgba(0,0,0,0.2);
+    color: #fff;
+    border-color: rgba(255,255,255,0.3);
+}
+body.theme-red #letter-options select option {
+    background-color: rgba(0,0,0,0.8);
+    color: #fff;
+}
+body.theme-red ::placeholder { color: rgba(255,255,255,0.7); }
+body.theme-red #create-letter-btn,
+body.theme-red .theme-buttons button,
+body.theme-red #copy-link-btn {
+    background-color: #FF5F6D;
+    color: #fff;
+    border-color: #FFC371;
+}
+body.theme-red #create-letter-btn:hover,
+body.theme-red .theme-buttons button:hover,
+body.theme-red #copy-link-btn:hover {
+    background-color: #FFC371;
+    color: #FF5F6D;
+    border-color: #FF5F6D; /* Ensure hover border color matches theme */
+}
+body.theme-red #actual-letter-content {
+    background-color: rgba(0,0,0,0.1);
+    border-color: rgba(255,255,255,0.2);
+}
+
+
+/* --- Theme: Black (Dark Mode) --- */
+body.theme-black {
+    background: #000000;
+    color: #e0e0e0; /* Retain light text color for contrast */
+}
+body.theme-black .panel {
+    background-color: #1a1a1a; /* Slightly off-black for panels */
+    border-color: #333333; /* Darker borders */
+    color: #e0e0e0;
+    box-shadow: 0 4px 15px rgba(255,255,255,0.1); /* Lighter shadow for visibility */
+}
+body.theme-black #letter-writer textarea,
+body.theme-black #letter-options select,
+body.theme-black #share-link-container input[type="text"] {
+    background-color: #2c2c2c;
+    color: #e0e0e0;
+    border-color: #444444;
+}
+body.theme-black #letter-options select option {
+    background-color: #2c2c2c; /* Match select background for consistency */
+    color: #e0e0e0;
+}
+body.theme-black ::placeholder { color: rgba(224,224,224,0.4); }
+body.theme-black #create-letter-btn,
+body.theme-black .theme-buttons button,
+body.theme-black #copy-link-btn {
+    background-color: #333333; /* Dark grey buttons */
+    color: #ffffff; /* White text on buttons */
+    border-color: #555555;
+}
+body.theme-black #create-letter-btn:hover,
+body.theme-black .theme-buttons button:hover,
+body.theme-black #copy-link-btn:hover {
+    background-color: #444444; /* Lighter grey on hover */
+    color: #ffffff;
+    border-color: #666666; /* Ensure hover border color matches theme */
+}
+body.theme-black #actual-letter-content {
+    background-color: #1c1c1c; /* Very dark grey for letter content */
+    border-color: #383838;
+    color: #e0e0e0;
+}
+
+/* --- Theme: Off-White (Light & Elegant) --- */
+body.theme-off-white {
+    background: linear-gradient(135deg, #FFFBEA, #FFEAD0);
+    color: var(--text-color-light);
+}
+body.theme-off-white .panel {
+    background-color: var(--panel-bg-light);
+    border-color: var(--panel-border-light);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    color: var(--text-color-light);
+}
+body.theme-off-white #letter-writer textarea,
+body.theme-off-white #letter-options select,
+body.theme-off-white #share-link-container input[type="text"] {
+    background-color: var(--input-bg-light);
+    color: var(--text-color-light);
+    border-color: var(--input-border-light);
+}
+body.theme-off-white #letter-options select option {
+    background-color: var(--input-bg-light);
+    color: var(--text-color-light);
+}
+body.theme-off-white ::placeholder { color: #999; }
+body.theme-off-white #create-letter-btn {
+    background-color: #6c757d; 
+    color: white;
+    border-color: #5a6268;
+}
+body.theme-off-white #create-letter-btn:hover {
+    background-color: #545b62;
+    border-color: #495057; /* Ensure hover border color matches theme */
+}
+body.theme-off-white .theme-buttons button,
+body.theme-off-white #copy-link-btn {
+    background-color: #f8f9fa;
+    color: #343a40;
+    border-color: #ced4da;
+}
+body.theme-off-white .theme-buttons button:hover,
+body.theme-off-white #copy-link-btn:hover {
+    background-color: #e9ecef;
+    border-color: #ced4da; /* Ensure hover border color matches theme */
+}
+body.theme-off-white #actual-letter-content {
+    background-color: #f8f9fa;
+    border-color: #e9ecef;
+}
+
+/* --- Theme: Red Wine --- */
+body.theme-red-wine {
+    background: linear-gradient(135deg, #51080d, #2b0307);
+    color: #f0f0f0;
+}
+body.theme-red-wine .panel {
+    background-color: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.2);
+    color: #f0f0f0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+body.theme-red-wine #letter-writer textarea,
+body.theme-red-wine #letter-options select,
+body.theme-red-wine #share-link-container input[type="text"] {
+    background-color: rgba(0,0,0,0.2);
+    color: #f0f0f0;
+    border-color: rgba(255,255,255,0.2);
+}
+body.theme-red-wine #letter-options select option {
+    background-color: rgba(0,0,0,0.8);
+    color: #f0f0f0;
+}
+body.theme-red-wine ::placeholder { color: rgba(240,240,240,0.6); }
+body.theme-red-wine #create-letter-btn,
+body.theme-red-wine #copy-link-btn {
+    background-image: linear-gradient(135deg, #51080d, #2b0307);
+    color: #f0f0f0;
+    border-color: #6D214F; /* Dark Magenta */
+    background-size: 250% 250%;
+    animation: hoverGradientAnimation 15s linear infinite;
+}
+
+body.theme-red-wine .theme-buttons button {
+    background-image: linear-gradient(135deg, #51080d, #2b0307);
+    color: #f0f0f0;
+    border-color: #6D214F;
+    background-size: 250% 250%;
+    animation: hoverGradientAnimation 15s linear infinite;
+}
+
+body.theme-red-wine #create-letter-btn:hover,
+body.theme-red-wine .theme-buttons button:hover,
+body.theme-red-wine #copy-link-btn:hover {
+    color: #ffffff; /* Brighter text on hover */
+    border-color: #B71540; /* Crimson border on hover, distinct from default */
+    /* background-color is intentionally not set to preserve the animation */
+    /* filter: brightness(1.1); /* Optional: for a subtle pop */
+}
+body.theme-red-wine #actual-letter-content {
+    background-color: rgba(0,0,0,0.15);
+    border-color: rgba(255,255,255,0.2);
+}
+
+/* --- Theme: Ocean Blue --- */
+body.theme-ocean-blue {
+    background: linear-gradient(135deg, #274272, #0D1433);
+    color: #e0f2f7; /* Light cyan/blue text for good contrast */
+}
+body.theme-ocean-blue .panel {
+    background-color: rgba(255,255,255,0.07); /* Slightly more transparent panels */
+    border-color: rgba(173, 216, 230, 0.3); /* Light blue border, semi-transparent */
+    color: #e0f2f7;
+    box-shadow: 0 4px 18px rgba(0,0,0,0.25);
+}
+body.theme-ocean-blue #letter-writer textarea,
+body.theme-ocean-blue #letter-options select,
+body.theme-ocean-blue #share-link-container input[type="text"] {
+    background-color: rgba(0,0,0,0.25);
+    color: #e0f2f7;
+    border-color: rgba(173, 216, 230, 0.25);
+}
+body.theme-ocean-blue #letter-options select option {
+    background-color: rgba(0,0,0,0.8);
+    color: #e0f2f7;
+}
+body.theme-ocean-blue ::placeholder { color: rgba(224,242,247,0.5); }
+body.theme-ocean-blue #create-letter-btn,
+body.theme-ocean-blue .theme-buttons button,
+body.theme-ocean-blue #copy-link-btn {
+    background-color: #274272; /* Main blue from gradient */
+    color: #ffffff;
+    border-color: #0D1433; /* Darker blue from gradient */
+}
+body.theme-ocean-blue #create-letter-btn:hover,
+body.theme-ocean-blue .theme-buttons button:hover,
+body.theme-ocean-blue #copy-link-btn:hover {
+    background-color: #0D1433; /* Darker blue on hover */
+    color: #e0f2f7;
+    border-color: #274272; /* Ensure hover border color matches theme */
+}
+body.theme-ocean-blue #actual-letter-content {
+    background-color: rgba(0,0,0,0.2);
+    border-color: rgba(173, 216, 230, 0.2);
+    color: #e0f2f7;
+}
+
+/* Override label colors for dark themes */
+body.theme-blue #letter-options label,
+body.theme-red #letter-options label,
+body.theme-black #letter-options label,
+body.theme-red-wine #letter-options label,
+body.theme-ocean-blue #letter-options label {
+    color: #fff; /* White color for labels on dark themes */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 900px) {
+    .app-container {
+        flex-direction: column;
+    }
+    .left-pane, .right-pane {
+        flex: none; /* Reset flex grow/shrink */
+        width: 100%; /* Full width on smaller screens */
+    }
+    .middle-content-area {
+        flex-direction: column; /* Stack middle elements on smaller screens */
+    }
+    .middle-left-column, #letter-options {
+        flex: none; /* Reset flex grow/shrink */
+        width: 100%;
+    }
+}
+
+/* --- Keyframe animation for button hover gradient --- */
+@keyframes hoverGradientAnimation {
+    0% { background-position: 0% 0%; }
+    50% { background-position: 100% 100%; }
+    100% { background-position: 0% 0%; }
+}
+
+/* --- Hover effects for Theme Buttons --- */
+.theme-buttons button[data-theme="blue"]:hover {
+    background-image: linear-gradient(135deg, #6DD5FA, #2980B9);
+    color: #f0f0f0; 
+    border-color: #6DD5FA; 
+    background-size: 250% 250%;
+    animation: hoverGradientAnimation 15s linear infinite;
+}
+
+.theme-buttons button[data-theme="red"]:hover {
+    background-image: linear-gradient(135deg, #FF5F6D, #FFC371);
+    color: #fff; 
+    border-color: #FFC371; 
+    background-size: 250% 250%;
+    animation: hoverGradientAnimation 15s linear infinite;
+}
+
+.theme-buttons button[data-theme="black"]:hover {
+    background-image: linear-gradient(135deg, #2c2c2c, #1a1a1a); 
+    color: #e0e0e0; 
+    border-color: #555555; 
+    background-size: 250% 250%;
+    animation: hoverGradientAnimation 15s linear infinite;
+}
+
+.theme-buttons button[data-theme="off-white"]:hover {
+    background-image: linear-gradient(135deg, #FFFBEA, #FFEAD0);
+    color: #343a40; 
+    border-color: #ced4da; 
+    background-size: 250% 250%;
+    animation: hoverGradientAnimation 15s linear infinite;
+}
+
+.theme-buttons button[data-theme="red-wine"]:hover {
+    background-image: linear-gradient(135deg, #51080d, #2b0307);
+    color: #f0f0f0; 
+    border-color: #6D214F; 
+    background-size: 250% 250%;
+    animation: hoverGradientAnimation 15s linear infinite;
+}
+
+.theme-buttons button[data-theme="ocean-blue"]:hover {
+    background-image: linear-gradient(135deg, #274272, #0D1433);
+    color: #e0f2f7; 
+    border-color: #0D1433; 
+    background-size: 250% 250%;
+    animation: hoverGradientAnimation 15s linear infinite;
+}

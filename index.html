@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ephemeral Letters - Secure & Private Messaging</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+</head>
+<body class="theme-off-white"> <!-- Default theme -->
+    <div class="app-container">
+        <div class="left-pane">
+            <!-- Box ②: About/Description -->
+            <section id="about" class="panel">
+                <h2>Welcome to Ephemeral Letters</h2>
+                <p>Craft secure, ephemeral messages that self-destruct after a set time or can be viewed only once. Perfect for confidential notes and private communications, ensuring your words remain transient and protected.</p>
+            </section>
+
+            <div class="middle-content-area">
+                <div class="middle-left-column">
+                    <!-- The original letter-writer section is replaced by quick-tips -->
+                    <section id="quick-tips" class="panel">
+                        <h3>Developer</h3>
+                        <p>Created by: @thvlayu</p>
+                        <p>Connect: <a href="#" id="github-link">GitHub</a> | <a href="#" id="instagram-link">Instagram</a></p>
+                    </section>
+
+                    <!-- Small Square: Themes -->
+                    <section id="theme-selector" class="panel theme-options-panel">
+                        <h4>Themes</h4>
+                        <div class="theme-buttons">
+                            <button data-theme="blue">Blue</button>
+                            <button data-theme="red">Red</button>
+                            <button data-theme="black">Black</button>
+                            <button data-theme="off-white">Off-White</button>
+                            <button data-theme="red-wine">Red Wine</button>
+                            <button data-theme="ocean-blue">Ocean Blue</button>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Taller Rectangle: Other Features -->
+                <section id="letter-options" class="panel letter-config-panel">
+                    <h4>Letter Options</h4>
+                    <div>
+                        <label for="letter-type">Type:</label>
+                        <select id="letter-type">
+                            <option value="normal">Normal Letter</option>
+                            <option value="secret">Secret Message (One-Time View)</option>
+                        </select>
+                    </div>
+                    <div id="normal-letter-options">
+                        <label for="letter-duration">Expires in:</label>
+                        <select id="letter-duration">
+                            <option value="3600000">1 Hour</option>
+                            <option value="21600000">6 Hours</option>
+                            <option value="43200000">12 Hours</option>
+                            <option value="86400000">1 Day</option>
+                        </select>
+                    </div>
+                    <button id="create-letter-btn">Create Letter</button>
+                </section>
+            </div>
+
+            <!-- Box ①: Secret Message Info / Call to Action -->
+            <section id="secret-info" class="panel secret-cta-panel">
+                <p>Experience a new standard in digital correspondence. Our platform is designed for privacy-conscious individuals who value the art of the ephemeral message.</p>
+            </section>
+        </div>
+
+        <!-- Box ③: Letter Display Area -->
+        <aside id="letter-display" class="panel right-pane">
+            <div id="letter-output">
+                <h2>Write a letter...</h2>
+
+                <!-- Moved letter-writer section (original h3 removed, textarea retained) -->
+                <section id="letter-writer" class="panel letter-input-panel">
+                    <textarea id="letter-text" placeholder="Your message here..."></textarea>
+                </section>
+                <div id="actual-letter-content">
+                    <p>Your letter will appear here once created. If you're viewing a shared link, the letter content (or status) will be shown here.</p>
+                </div>
+                <div id="share-link-container" style="display: none;">
+                    <p>Share this link:</p>
+                    <input type="text" id="shareable-link-field" readonly>
+                    <button id="copy-link-btn">Copy Link</button>
+                </div>
+                 <div id="message-status"></div>
+            </div>
+        </aside>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
