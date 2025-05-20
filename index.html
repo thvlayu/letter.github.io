@@ -72,6 +72,10 @@
         <!-- Box ③: Letter Display Area -->
         <aside id="letter-display" class="panel right-pane">
             <div id="letter-output">
+                <div id="account-icon-container">
+                    <!-- Placeholder for account icon -->
+                    <svg id="account-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-circle"><path d="M18 20a6 6 0 0 0-12 0"/><circle cx="12" cy="10" r="4"/><circle cx="12" cy="12" r="10"/></svg>
+                </div>
                 <h2>Write a letter...</h2>
 
                 <!-- Moved letter-writer section (original h3 removed, textarea retained) -->
@@ -89,6 +93,43 @@
                  <div id="message-status"></div>
             </div>
         </aside>
+    </div>
+
+    <!-- Account Modal -->
+    <div id="account-modal-overlay" class="modal-overlay hidden">
+        <div id="account-modal" class="modal">
+            <button id="close-modal-btn" class="modal-close-btn">&times;</button>
+            <h2>Account</h2>
+            <div id="auth-view">
+                <!-- Email Entry View -->
+                <div id="email-entry-view">
+                    <p>Sign in or create an account with your Gmail.</p>
+                    <label for="modal-email-input">Enter your Gmail:</label>
+                    <input type="email" id="modal-email-input" placeholder="your.email@gmail.com">
+                    <button id="modal-send-otp-btn">Send Login Code</button>
+                </div>
+                <!-- OTP Entry View -->
+                <div id="otp-entry-view" style="display: none;">
+                    <p>A login code has been sent to your email. Please enter it below.</p>
+                    <label for="modal-otp-input">Enter Code:</label>
+                    <input type="text" id="modal-otp-input" placeholder="123456">
+                    <button id="modal-verify-otp-btn">Login</button>
+                </div>
+                <!-- Username Choice View -->
+                <div id="username-choice-view" style="display: none;">
+                    <p>Welcome! Choose a username to complete your account setup.</p>
+                    <label for="modal-username-input">Choose Username:</label>
+                    <input type="text" id="modal-username-input" placeholder="your_username">
+                    <button id="modal-set-username-btn">Set Username</button>
+                </div>
+                <!-- Logged In View -->
+                <div id="logged-in-view" style="display: none;">
+                    <p>Welcome, <span id="modal-user-identifier"></span>!</p>
+                    <button id="modal-logout-btn">Logout</button>
+                </div>
+            </div>
+            <p id="modal-auth-message" class="auth-status-message"></p>
+        </div>
     </div>
 
     <script src="script.js"></script>
