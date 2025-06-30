@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glassmorphism Panel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 3D Spheres Background */
+        .sphere {
+            position: absolute;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #333 0%, #555 50%, #222 100%);
+            box-shadow: 
+                inset -20px -20px 50px rgba(0,0,0,0.5),
+                inset 20px 20px 50px rgba(255,255,255,0.1),
+                0 0 80px rgba(255,255,255,0.05);
+        }
+
+        .sphere:nth-child(1) {
+            width: 200px;
+            height: 200px;
+            top: 20%;
+            left: 15%;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .sphere:nth-child(2) {
+            width: 150px;
+            height: 150px;
+            top: 60%;
+            right: 20%;
+            animation: float 6s ease-in-out infinite reverse;
+        }
+
+        .sphere:nth-child(3) {
+            width: 120px;
+            height: 120px;
+            bottom: 25%;
+            left: 25%;
+            animation: float 7s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+            }
+        }
+
+        /* Glass Panel */
+        .glass-panel {
+            position: relative;
+            width: 380px;
+            height: 240px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px;
+            z-index: 10;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .glass-panel:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            border-radius: 16px 16px 0 0;
+        }
+
+        /* Typography */
+        .title {
+            color: #ffffff;
+            font-size: 28px;
+            font-weight: 300;
+            line-height: 1.2;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            font-weight: 400;
+            margin-bottom: 40px;
+            letter-spacing: 0.2px;
+        }
+
+        /* Bottom Section */
+        .bottom-section {
+            position: absolute;
+            bottom: 32px;
+            left: 32px;
+            right: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .meta-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .format-badge {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            padding: 2px 6px;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            width: fit-content;
+        }
+
+        .description {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            font-weight: 400;
+            line-height: 1.3;
+            margin-top: 2px;
+        }
+
+        /* Status Indicator */
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            border-radius: 50%;
+            box-shadow: 
+                0 0 10px #00ff88,
+                0 0 20px rgba(0, 255, 136, 0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1);
+            }
+        }
+
+        /* Interactive Effects */
+        .glass-panel:active {
+            transform: translateY(0px) scale(0.98);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .glass-panel {
+                width: 90vw;
+                max-width: 360px;
+                margin: 20px;
+            }
+            
+            .sphere {
+                opacity: 0.7;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Spheres -->
+    <div class="sphere"></div>
+    <div class="sphere"></div>
+    <div class="sphere"></div>
+
+    <!-- Glass Panel -->
+    <div class="glass-panel" id="glassPanel">
+        <div class="title">Glass<br>Morphism</div>
+        <div class="subtitle">mockup.</div>
+        
+        <div class="bottom-section">
+            <div class="meta-info">
+                <div class="format-badge">THVLAYU | ROSERUG</div>
+                <div class="description">Isolated Objects &<br>Editable Colors</div>
+            </div>
+            <div class="status-indicator"></div>
+        </div>
+    </div>
+
+    <script>
+        // Interactive panel effects
+        const glassPanel = document.getElementById('glassPanel');
+        
+        // Mouse move parallax effect
+        glassPanel.addEventListener('mousemove', (e) => {
+            const rect = glassPanel.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = (y - centerY) / 10;
+            const rotateY = (centerX - x) / 10;
+            
+            glassPanel.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-2px)`;
+        });
+        
+        // Reset transform on mouse leave
+        glassPanel.addEventListener('mouseleave', () => {
+            glassPanel.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0px)';
+        });
+        
+        // Click interaction
+        glassPanel.addEventListener('click', () => {
+            // Add subtle click feedback
+            glassPanel.style.transform = 'perspective(1000px) scale(0.98)';
+            setTimeout(() => {
+                glassPanel.style.transform = 'perspective(1000px) scale(1)';
+            }, 150);
+        });
+        
+        // Dynamic background sphere animation
+        const spheres = document.querySelectorAll('.sphere');
+        spheres.forEach((sphere, index) => {
+            sphere.addEventListener('mouseenter', () => {
+                sphere.style.transform = 'scale(1.1)';
+                sphere.style.boxShadow = `
+                    inset -20px -20px 50px rgba(0,0,0,0.7),
+                    inset 20px 20px 50px rgba(255,255,255,0.2),
+                    0 0 120px rgba(255,255,255,0.1)
+                `;
+            });
+            
+            sphere.addEventListener('mouseleave', () => {
+                sphere.style.transform = 'scale(1)';
+                sphere.style.boxShadow = `
+                    inset -20px -20px 50px rgba(0,0,0,0.5),
+                    inset 20px 20px 50px rgba(255,255,255,0.1),
+                    0 0 80px rgba(255,255,255,0.05)
+                `;
+            });
+        });
+    </script>
+</body>
+</html>
