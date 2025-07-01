@@ -52,10 +52,38 @@ document.addEventListener('DOMContentLoaded', () => {
     const recipientInput = document.querySelector('.recipient-input');
     const letterEditor = document.querySelector('.letter-editor');
 
+    // --- Auth Elements ---
+    const authModalContainer = document.getElementById('auth-modal-container');
+    const usernameModalContainer = document.getElementById('username-modal-container');
+    const otpModalContainer = document.getElementById('otp-modal-container');
+    const authForm = document.getElementById('auth-form');
+    const authTitle = document.getElementById('auth-title');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const authToggleLink = document.getElementById('auth-toggle-link');
+    const authToggleText = document.getElementById('auth-toggle-text');
+    const authError = document.getElementById('auth-error');
+    const authEmailInput = document.getElementById('auth-email');
+    const authPasswordInput = document.getElementById('auth-password');
+    const usernameForm = document.getElementById('username-form');
+    const usernameInput = document.getElementById('username-input');
+    const usernameError = document.getElementById('username-error');
+    const accountPopupBody = document.getElementById('account-popup-body');
+    const accountPopupUserView = document.getElementById('account-popup-user-view');
+    const accountUsernameSpan = document.getElementById('account-username');
+    const popupLoginBtn = document.getElementById('popup-login-btn');
+    const popupSignupBtn = document.getElementById('popup-signup-btn');
+    const popupLogoutBtn = document.getElementById('popup-logout-btn');
+    const computerWindowUser = document.querySelector('#computer-window ul li b');
+    const letterHistory = document.querySelector('.letter-history');
+    const letterSearchInput = document.querySelector('.letter-search');
+    const expirationControl = document.getElementById('expiration-control');
+    const expirationSlider = document.getElementById('expiration-slider');
+    const expirationDisplay = document.getElementById('expiration-display');
+
     // --- Supabase Setup ---
     // IMPORTANT: Replace with your actual Supabase project URL and anon key
-    const SUPABASE_URL = 'https://gjypexdjcvhjboozatok.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqeXBleGRqY3ZoamJvb3phdG9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyNjEyODQsImV4cCI6MjA2NjgzNzI4NH0.N-tU8lG8uihs5I-50JRtzLnhrZtza5GQcCbW7pFIpiE';
+    const SUPABASE_URL = 'https://wfekcsjzfhcdntzhltnk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmZWtjc2p6ZmhjZG50emhsdG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzNjMwMzIsImV4cCI6MjA2NjkzOTAzMn0.YOfngdAb-eW_zTKrreN7WgQ9kAxSOA4BoPRbdreaIGk';
     let supabase = null;
     try {
         if (window.supabase) {
@@ -92,6 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let sessionStartTime = null;
     let sessionInterval = null;
     let activeIcon = null; // To track which icon was right-clicked
+    let authMode = 'signin'; // 'signin' or 'signup'
+    let recipientProfile = null; // Store the full profile of a validated recipient
 
     let smoother = null;
     let macTimeline = null;
@@ -308,74 +338,154 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sendLetterBtn) {
         sendLetterBtn.addEventListener('click', async () => {
             if (sendLetterBtn.classList.contains('sent') || sendLetterBtn.disabled) return;
-
-            // Case 1: 'To' field has a recipient. Standard send behavior.
-            if (recipientInput.value.trim() !== '') {
-                sendLetterBtn.classList.add('sent');
-                setTimeout(() => {
-                    sendLetterBtn.classList.remove('sent');
-                }, 2000);
-                console.log(`Sending letter to ${recipientInput.value}`);
-                // In the future, you could add logic here to handle sending to a registered user.
+    
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                alert("You must be logged in to send a letter.");
                 return;
             }
-
-            // Case 2: 'To' field is empty. Create a shareable link via Supabase.
-            if (!supabase || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-                alert('This feature is not configured. Please set up Supabase credentials.');
-                return;
-            }
-
-            const letterContent = letterEditor.value;
-            if (!letterContent.trim()) {
+    
+            const letterContent = letterEditor.value.trim();
+            if (!letterContent) {
                 alert('Please write a letter first!');
                 return;
             }
-
+    
             sendLetterBtn.disabled = true;
-            sendLetterBtn.querySelector('.send-text').textContent = 'Saving...';
+            sendLetterBtn.querySelector('.send-text').textContent = 'Sending...';
             copyLinkBtn.classList.remove('show');
-
+    
             try {
-                const { data, error } = await supabase
+                // --- Step 1: Prepare the letter data for the database ---
+                const letterData = {
+                    sender_id: session.user.id,
+                    content: letterContent,
+                    type: dropdown.dataset.value || 'normal'
+                };
+    
+                // Determine if sending to a user or creating a public link
+                if (recipientProfile) {
+                    letterData.recipient_id = recipientProfile.id;
+                } else {
+                    // Public link, recipient_id is null. Check for expiration on normal letters.
+                    if (letterData.type === 'normal') {
+                        const hours = parseInt(expirationSlider.value, 10);
+                        const expires_at = new Date();
+                        expires_at.setHours(expires_at.getHours() + hours);
+                        letterData.expires_at = expires_at.toISOString();
+                    }
+                }
+    
+                // --- Step 2: Insert the letter into the database ---
+                const { data: insertedData, error: insertError } = await supabase
                     .from('letters')
-                    .insert([{ content: letterContent }])
+                    .insert([letterData])
                     .select()
                     .single();
-
-                if (error) throw error;
-
-                if (data) {
-                    const shareableLink = `${window.location.origin}${window.location.pathname}?id=${data.id}`;
-                    
+    
+                if (insertError) throw insertError;
+    
+                // --- Step 3: Save a copy to the user's local history for their records ---
+                const localLetter = {
+                    id: `local-${Date.now()}`,
+                    db_id: insertedData.id, // Keep a reference to the database ID
+                    recipient: recipientProfile ? recipientProfile.username : 'Shared Link',
+                    content: letterContent,
+                    timestamp: new Date().toISOString()
+                };
+                saveLetter(session.user.id, localLetter);
+                loadAndDisplayLetters(session.user.id);
+    
+                // --- Step 4: Update UI based on success ---
+                if (!recipientProfile) {
+                    // If it was a public link, show the copy button
+                    const shareableLink = `${window.location.origin}${window.location.pathname}?id=${insertedData.id}`;
                     copyLinkBtn.style.display = 'inline-block';
                     setTimeout(() => copyLinkBtn.classList.add('show'), 10);
-
                     copyLinkBtn.onclick = () => {
                         navigator.clipboard.writeText(shareableLink).then(() => {
                             copyLinkBtn.title = 'Copied!';
                             setTimeout(() => { copyLinkBtn.title = 'Copy link'; }, 2000);
-                        }).catch(err => {
-                            console.error('Failed to copy link:', err);
-                            alert('Failed to copy link.');
                         });
                     };
-
-                    sendLetterBtn.classList.add('sent');
-                    sendLetterBtn.querySelector('.send-text').textContent = 'Sent';
                 }
-
+    
+                // Reset UI elements
+                letterEditor.value = '';
+                recipientInput.value = '';
+                recipientInput.classList.remove('valid-user', 'invalid-user');
+                recipientProfile = null;
+    
+                sendLetterBtn.classList.add('sent');
+                sendLetterBtn.querySelector('.send-text').textContent = 'Sent';
+    
             } catch (error) {
-                console.error('Error saving letter:', error.message);
-                alert('Could not save the letter. Please check the console and your Supabase setup.');
-                sendLetterBtn.querySelector('.send-text').textContent = 'Send'; // Reset button text
+                console.error('Error sending letter:', error.message);
+                alert('Could not send the letter. Please check the console.');
             } finally {
-                // Re-enable the button after a delay, unless it was successful
-                if (!sendLetterBtn.classList.contains('sent')) {
+                // Re-enable the send button after a short delay
+                setTimeout(() => {
                     sendLetterBtn.disabled = false;
-                }
+                    sendLetterBtn.classList.remove('sent');
+                    sendLetterBtn.querySelector('.send-text').textContent = 'Send';
+                }, 2000);
             }
         });
+    }
+
+    // --- Debounce function for input validation ---
+    function debounce(func, delay) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), delay);
+        };
+    }
+
+    // --- Username Validation Logic ---
+    async function checkUsername(username) {
+        if (!username) {
+            recipientInput.classList.remove('valid-user', 'invalid-user');
+            recipientProfile = null;
+            return;
+        }
+
+        if (!supabase) return;
+
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('username', username)
+                .single();
+            
+            if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+                throw error;
+            }
+
+            if (data) {
+                recipientInput.classList.add('valid-user');
+                recipientInput.classList.remove('invalid-user');
+                recipientProfile = { id: data.id, username: username };
+            } else {
+                recipientInput.classList.add('invalid-user');
+                recipientInput.classList.remove('valid-user');
+                recipientProfile = null;
+            }
+
+        } catch (error) {
+            console.error("Error checking username:", error.message);
+            recipientInput.classList.add('invalid-user');
+            recipientInput.classList.remove('valid-user');
+            recipientProfile = null;
+        }
+    }
+
+    if (recipientInput) {
+        recipientInput.addEventListener('input', debounce((e) => {
+            checkUsername(e.target.value.trim());
+        }, 500));
     }
 
     function changeQuestionMarkFonts() {
@@ -503,6 +613,335 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add click listeners to question marks
     questionMarks.forEach(qm => {
         qm.addEventListener('click', handleQuestionMarkClick);
+    });
+
+    // --- Authentication Logic ---
+
+    // Update UI based on auth state
+    function updateUIForAuthState(session, profile) {
+        if (session && profile) {
+            // User is logged in and has a profile
+            if (accountPopupBody) accountPopupBody.style.display = 'none';
+            if (accountPopupUserView) accountPopupUserView.style.display = 'block';
+            if (accountUsernameSpan) accountUsernameSpan.textContent = profile.username;
+            if (computerWindowUser) computerWindowUser.textContent = profile.username;
+            if (logOffBtn) logOffBtn.textContent = 'Log Out';
+        } else {
+            // User is logged out or doesn't have a profile yet
+            if (accountPopupBody) accountPopupBody.style.display = 'block';
+            if (accountPopupUserView) accountPopupUserView.style.display = 'none';
+            if (computerWindowUser) computerWindowUser.textContent = 'Guest (Not Logged In)';
+            if (logOffBtn) logOffBtn.textContent = 'Log OFF';
+        }
+    }
+
+    async function getProfile(userId) {
+        if (!supabase) return null;
+        try {
+            const { data, error, status } = await supabase
+                .from('profiles')
+                .select(`username`)
+                .eq('id', userId)
+                .single();
+
+            if (error && status !== 406) {
+                throw error;
+            }
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching profile:', error.message);
+            return null;
+        }
+    }
+
+    // --- Letter Saving and Searching Logic ---
+
+    // Fetches profiles from a list of IDs to avoid multiple single queries.
+    // Also uses a simple cache to prevent re-fetching the same profile in a session.
+    const profileCache = new Map();
+    async function getProfilesByIds(ids) {
+        const idsToFetch = ids.filter(id => id && !profileCache.has(id));
+        if (idsToFetch.length > 0) {
+            const { data, error } = await supabase.from('profiles').select('id, username').in('id', idsToFetch);
+            if (error) {
+                console.error("Error fetching profiles:", error);
+                return;
+            }
+            data.forEach(profile => profileCache.set(profile.id, profile));
+        }
+    }
+
+    function getSavedLetters(userId) {
+        if (!userId) return [];
+        const lettersJSON = localStorage.getItem(`web-os-letters-${userId}`);
+        return lettersJSON ? JSON.parse(lettersJSON) : [];
+    }
+
+    function saveLetter(userId, newLetter) {
+        if (!userId) return;
+        const letters = getSavedLetters(userId);
+        letters.unshift(newLetter); // Add new letter to the top
+        localStorage.setItem(`web-os-letters-${userId}`, JSON.stringify(letters));
+    }
+
+    async function renderLetters(letters, currentUserId) {
+        if (!letterHistory) return;
+        letterHistory.innerHTML = ''; // Clear current list
+
+        if (!letters || letters.length === 0) {
+            letterHistory.innerHTML = '<p style="padding: 10px; text-align: center; color: #888; font-size: 12px;">No mail yet.</p>';
+            return;
+        }
+
+        // We need usernames for senders/recipients. Fetch them in one go.
+        const profileIds = new Set();
+        letters.forEach(letter => {
+            if (letter.sender_id) profileIds.add(letter.sender_id);
+            if (letter.recipient_id) profileIds.add(letter.recipient_id);
+        });
+
+        await getProfilesByIds(Array.from(profileIds));
+
+        letters.forEach(letter => {
+            const preview = letter.content ? letter.content.substring(0, 35) + (letter.content.length > 35 ? '...' : '') : 'No content';
+            const item = document.createElement('div');
+            item.className = 'letter-item';
+            item.dataset.id = letter.id; // Use database ID
+
+            const isSent = letter.sender_id === currentUserId;
+            let otherPartyUsername = 'Unknown';
+            if (isSent) {
+                const recipientProfile = letter.recipient_id ? profileCache.get(letter.recipient_id) : null;
+                otherPartyUsername = recipientProfile ? `To: ${recipientProfile.username}` : 'Public Link';
+            } else {
+                const senderProfile = letter.sender_id ? profileCache.get(letter.sender_id) : null;
+                otherPartyUsername = senderProfile ? `From: ${senderProfile.username}` : 'System';
+            }
+            
+            // Add a class if the letter is unread (a simple example, can be improved)
+            if (!isSent && !letter.read) { // 'read' property would need to be added to DB
+                 item.classList.add('unread');
+            }
+
+            item.innerHTML = `
+                <div class="letter-item-sender">${otherPartyUsername}</div>
+                <div class="letter-item-preview">${preview}</div>
+                <div class="letter-item-date">${new Date(letter.created_at).toLocaleDateString()}</div>
+            `;
+            letterHistory.appendChild(item);
+        });
+    }
+
+    async function loadAndDisplayLetters(userId, searchTerm = '') {
+        if (!supabase || !userId) return;
+
+        let letters = [];
+        if (searchTerm) {
+            // Use the database function for searching
+            const { data, error } = await supabase.rpc('search_letters', { search_term: searchTerm });
+            if (error) {
+                console.error("Error searching letters:", error);
+                return;
+            }
+            letters = data;
+        } else {
+            // Fetch all letters for the user (sent and received)
+            const { data, error } = await supabase
+                .from('letters')
+                .select('*')
+                .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching letters:", error);
+                return;
+            }
+            letters = data;
+        }
+        
+        await renderLetters(letters, userId);
+    }
+
+    if (letterSearchInput) {
+        letterSearchInput.addEventListener('input', debounce(async (e) => {
+            const { data: sessionData } = await supabase.auth.getSession();
+            if (sessionData.session) {
+                loadAndDisplayLetters(sessionData.session.user.id, e.target.value);
+            }
+        }, 300));
+    }
+
+    // Listen to auth state changes
+    if (supabase) {
+        supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session) {
+                // User is logged in
+                const profile = await getProfile(session.user.id);
+                if (profile) {
+                    // User has a profile, update UI
+                    updateUIForAuthState(session, profile);
+                    loadAndDisplayLetters(session.user.id); // Load letters on login
+                    // Show expiration control if default is 'normal'
+                    if (document.getElementById('letter-type-dropdown').dataset.value === 'normal') {
+                         if (expirationControl) expirationControl.style.display = 'flex';
+                    }
+                    closeAllModals();
+                } else {
+                    // New user, needs to choose a username
+                    if (usernameModalContainer) usernameModalContainer.style.display = 'flex';
+                }
+            } else {
+                // User is logged out
+                updateUIForAuthState(null, null);
+                if (letterHistory) letterHistory.innerHTML = ''; // Explicitly clear on logout
+            }
+        });
+    }
+
+    function setAuthModalMode(mode) {
+        authMode = mode;
+        if (authTitle) authTitle.textContent = mode === 'signup' ? 'Sign Up' : 'Sign In';
+        if (authSubmitBtn) authSubmitBtn.textContent = mode === 'signup' ? 'Sign Up' : 'Sign In';
+        if (authToggleText) authToggleText.innerHTML = mode === 'signup' 
+            ? `Already have an account? <a href="#" id="auth-toggle-link">Sign In</a>`
+            : `Don't have an account? <a href="#" id="auth-toggle-link">Sign Up</a>`;
+        
+        // Re-add event listener to the new link
+        document.getElementById('auth-toggle-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            setAuthModalMode(authMode === 'signin' ? 'signup' : 'signin');
+        });
+    }
+
+    function openAuthModal(mode) {
+        setAuthModalMode(mode);
+        if(authError) authError.style.display = 'none';
+        if(authForm) authForm.reset();
+        if(authModalContainer) authModalContainer.style.display = 'flex';
+    }
+
+    function closeAllModals() {
+        if(authModalContainer) authModalContainer.style.display = 'none';
+        if(usernameModalContainer) usernameModalContainer.style.display = 'none';
+        if(otpModalContainer) otpModalContainer.style.display = 'none';
+    }
+
+    async function handleSignUp(email, password) {
+        if (!supabase) return;
+        try {
+            if (password.length < 6) {
+                throw new Error("Password must be at least 6 characters long.");
+            }
+            const { error } = await supabase.auth.signUp({ email, password });
+            if (error) throw error;
+            closeAllModals();
+            if(otpModalContainer) otpModalContainer.style.display = 'flex';
+        } catch (error) {
+            if(authError) {
+                authError.textContent = error.message;
+                authError.style.display = 'block';
+            }
+        }
+    }
+
+    async function handleSignIn(email, password) {
+        if (!supabase) return;
+        try {
+            const { error } = await supabase.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            // onAuthStateChange will handle the rest
+        } catch (error) {
+            if(authError) {
+                authError.textContent = "Invalid login credentials.";
+                authError.style.display = 'block';
+            }
+        }
+    }
+
+    async function handleLogOut() {
+        if (!supabase) return;
+        await supabase.auth.signOut();
+        // onAuthStateChange will handle the rest
+        if (letterHistory) letterHistory.innerHTML = ''; // Explicitly clear on logout
+        closeAllModals(); // Close any open popups like account info
+        const accountPopup = document.querySelector('#user-account-popup');
+        if(accountPopup) accountPopup.style.display = 'none';
+    }
+
+    // Event listeners for auth flow
+    popupLoginBtn?.addEventListener('click', () => openAuthModal('signin'));
+    popupSignupBtn?.addEventListener('click', () => openAuthModal('signup'));
+    popupLogoutBtn?.addEventListener('click', handleLogOut);
+
+    authForm?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const email = authEmailInput.value;
+        const password = authPasswordInput.value;
+        if (authMode === 'signup') {
+            handleSignUp(email, password);
+        } else {
+            handleSignIn(email, password);
+        }
+    });
+
+    usernameForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!supabase) return;
+
+        const newUsername = usernameInput.value.trim();
+        if(usernameError) usernameError.style.display = 'none';
+
+        try {
+            // Check if username is taken
+            const { data: existingUser, error: checkError } = await supabase
+                .from('profiles')
+                .select('username')
+                .eq('username', newUsername)
+                .single();
+
+            if (checkError && checkError.code !== 'PGRST116') { // Ignore 'exact one row' error
+                throw checkError;
+            }
+            if (existingUser) {
+                throw new Error("Username is already taken. Please choose another.");
+            }
+
+            // Save the profile
+            const { data: sessionData } = await supabase.auth.getSession();
+            const user = sessionData.session.user;
+
+            const { error: updateError } = await supabase.from('profiles').upsert({
+                id: user.id,
+                username: newUsername,
+                updated_at: new Date().toISOString(),
+            });
+
+            if (updateError) throw updateError;
+            
+            // Manually trigger a state change refresh by re-fetching profile
+            const profile = await getProfile(user.id);
+            updateUIForAuthState(sessionData.session, profile);
+            closeAllModals();
+
+        } catch(error) {
+            if(usernameError) {
+                usernameError.textContent = error.message;
+                usernameError.style.display = 'block';
+            }
+        }
+    });
+
+    // Add listeners to all modal containers and close buttons
+    document.querySelectorAll('.modal-container').forEach(container => {
+        container.addEventListener('click', (e) => {
+            if (e.target === container) { // Click on the overlay itself
+                closeAllModals();
+            }
+        });
+    });
+    document.querySelectorAll('.modal-close-btn').forEach(btn => {
+        btn.addEventListener('click', closeAllModals);
     });
 
     // All modal functions, auth functions, and their event listeners/calls removed.
@@ -633,12 +1072,17 @@ document.addEventListener('DOMContentLoaded', () => {
     startQuestionMarkAnimation();
 
     // --- Window Management ---
-    function openWindow(windowId) {
+    async function openWindow(windowId) {
         const targetWindow = document.getElementById(windowId);
         if (!targetWindow) return;
 
         if (windowId === 'terminal-window') {
             initTerminal();
+        } else if (windowId === 'letter-window') {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                loadAndDisplayLetters(session.user.id);
+            }
         }
 
         // If it was minimized, remove the tab
@@ -994,11 +1438,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Log Off Logic ---
     if(logOffBtn) {
         logOffBtn.addEventListener('click', () => {
+            const userIsGuest = logOffBtn.textContent === 'Log OFF';
+            if (userIsGuest) {
             if(smoother) {
                 smoother.paused(false);
                 smoother.scrollTo(0, true);
             } else {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            } else {
+                handleLogOut();
             }
         });
     }
@@ -1317,6 +1766,48 @@ Available commands:
             const toggle = dropdown.querySelector('.dropdown-toggle');
             const menu = dropdown.querySelector('.dropdown-menu');
             const selectedSpan = toggle.querySelector('span');
+            const dropdownItems = Array.from(menu.querySelectorAll('.dropdown-item'));
+            let isAnimating = false;
+
+            // Function to update the dropdown's value and text
+            function setDropdownValue(item, animate = false, direction = 1) {
+                if (isAnimating) return; // Guard against multiple calls
+                if (!item || !selectedSpan) return;
+
+                const newValue = item.dataset.value;
+                if (dropdown.dataset.value === newValue) return; // No change needed
+
+                const oldValue = dropdown.dataset.value;
+                dropdown.dataset.value = newValue;
+
+                if (animate) {
+                    isAnimating = true;
+                    gsap.timeline({ onComplete: () => { isAnimating = false; } })
+                        .to(selectedSpan, {
+                            y: -20 * direction,
+                            opacity: 0,
+                            duration: 0.2,
+                            ease: 'power2.in'
+                        })
+                        .call(() => {
+                            selectedSpan.textContent = item.textContent;
+                        })
+                        .set(selectedSpan, { y: 20 * direction })
+                        .to(selectedSpan, {
+                            y: 0,
+                            opacity: 1,
+                            duration: 0.2,
+                            ease: 'power2.out'
+                        });
+                } else {
+                     selectedSpan.textContent = item.textContent;
+                }
+            }
+            
+            // Set initial value
+            if (dropdownItems.length > 0) {
+                setDropdownValue(dropdownItems[0]);
+            }
 
             toggle.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1325,8 +1816,41 @@ Available commands:
 
             menu.addEventListener('click', (e) => {
                 if (e.target.classList.contains('dropdown-item')) {
-                    if (selectedSpan) selectedSpan.textContent = e.target.textContent;
+                    setDropdownValue(e.target, true);
                     dropdown.classList.remove('open');
+                }
+            });
+
+            // Add scroll wheel functionality
+            toggle.addEventListener('wheel', (e) => {
+                e.preventDefault();
+
+                const currentValue = dropdown.dataset.value;
+                let currentIndex = dropdownItems.findIndex(item => item.dataset.value === currentValue);
+                const direction = e.deltaY < 0 ? -1 : 1;
+                const nextIndex = (currentIndex + direction + dropdownItems.length) % dropdownItems.length;
+                
+                setDropdownValue(dropdownItems[nextIndex], true, direction);
+
+                // Toggle expiration control visibility
+                if (dropdownItems[nextIndex].dataset.value === 'normal') {
+                    gsap.to(expirationControl, { autoAlpha: 1, display: 'flex', duration: 0.3 });
+                } else {
+                    gsap.to(expirationControl, { autoAlpha: 0, display: 'none', duration: 0.3 });
+                }
+
+            }, { passive: false });
+        }
+
+        // --- Expiration Slider Logic ---
+        if (expirationSlider && expirationDisplay) {
+            expirationSlider.addEventListener('input', (e) => {
+                const hours = e.target.value;
+                if (hours < 24) {
+                    expirationDisplay.textContent = `${hours} hour${hours > 1 ? 's' : ''}`;
+                } else {
+                    const days = Math.floor(hours / 24);
+                    expirationDisplay.textContent = `${days} day${days > 1 ? 's' : ''}`;
                 }
             });
         }
@@ -1363,14 +1887,8 @@ Available commands:
                 }
                 clickedItem.classList.add('active');
                 
-                // Optional: Update composer based on selected letter
-                const sender = clickedItem.querySelector('.letter-item-sender')?.textContent;
-                const recipientInput = letterWindow.querySelector('.recipient-input');
-                const editor = letterWindow.querySelector('.letter-editor');
-                if (sender && recipientInput && editor) {
-                    recipientInput.value = `To: ${sender}`;
-                    editor.placeholder = `Reply to ${sender}...`;
-                }
+                // --- Load clicked letter content into editor ---
+                loadSelectedLetter(clickedItem.dataset.id);
             });
         }
         
@@ -1406,6 +1924,60 @@ Available commands:
         const tempoSlider = document.getElementById('tempo-slider');
         const tempoDisplay = document.getElementById('tempo-display');
         let playhead;
+
+        async function loadSelectedLetter(letterId) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+        
+            const { data: selectedLetter, error } = await supabase
+                .from('letters')
+                .select('*')
+                .eq('id', letterId)
+                .single();
+        
+            if (error && error.code !== 'PGRST116') {
+                 console.error("Error fetching selected letter:", error);
+                 return;
+            }
+            
+            if (!selectedLetter) {
+                // Letter might not be in the DB (e.g., a secret one that was deleted)
+                // but we can try to load it from our local archive.
+                const localLetters = getSavedLetters(session.user.id);
+                const localVersion = localLetters.find(l => l.db_id === letterId);
+                if (localVersion) {
+                    recipientInput.value = localVersion.recipient === 'Shared Link' ? '' : localVersion.recipient;
+                    editor.value = localVersion.content;
+                } else {
+                    editor.value = 'This letter is no longer available.';
+                }
+                return;
+            }
+        
+            // We have the letter from the database
+            const isRecipient = selectedLetter.recipient_id === session.user.id;
+
+            // Display the content
+            editor.value = selectedLetter.content;
+            let titleText = 'Letter';
+
+            // If it's a secret letter and the current user is the recipient, handle deletion
+            if (isRecipient && selectedLetter.type === 'secret') {
+                titleText = 'Secret Letter (will be destroyed)';
+                
+                // Delete from DB, then refresh the inbox view
+                await supabase.from('letters').delete().eq('id', letterId);
+                
+                // Also remove it from the local history archive if it exists there
+                const localLetters = getSavedLetters(session.user.id);
+                const updatedLocalLetters = localLetters.filter(l => l.db_id !== letterId);
+                localStorage.setItem(`web-os-letters-${session.user.id}`, JSON.stringify(updatedLocalLetters));
+
+                // Refresh the list
+                loadAndDisplayLetters(session.user.id);
+            }
+            letterWindow.querySelector('.title').textContent = titleText;
+        }
 
         function initChiptuneComposer() {
             if (!gridContainer || gridContainer.childElementCount > 0) return;
@@ -1551,10 +2123,9 @@ Available commands:
             try {
                 // Show the letter window if it's hidden
                 const letterWindow = document.getElementById('letter-window');
+                const letterIcon = document.getElementById('letter-icon');
                 if (window.getComputedStyle(letterWindow).display === 'none') {
-                     // This uses the existing logic for opening a window
-                    const letterIcon = document.getElementById('letter-icon');
-                    openWindow(letterIcon.dataset.target, letterIcon);
+                    openWindow(letterIcon.dataset.target);
                 }
 
                 // Set a loading state
@@ -1567,18 +2138,28 @@ Available commands:
 
                 const { data, error } = await supabase
                     .from('letters')
-                    .select('content')
+                    .select('content, type') // Fetch type as well
                     .eq('id', letterId)
                     .single();
 
                 if (error) throw error;
 
                 if (data) {
-                    recipientInput.value = 'Shared Letter (Read-Only)';
+                    let titleText = 'Shared Letter (Read-Only)';
+                    if (data.type === 'secret') {
+                        titleText = 'Secret Letter (will be destroyed after closing)';
+                        // Delete the letter from Supabase after a short delay
+                        setTimeout(async () => {
+                             await supabase.from('letters').delete().eq('id', letterId);
+                        }, 500);
+                    }
+                    
+                    letterWindow.querySelector('.title').textContent = titleText;
+                    recipientInput.value = titleText;
                     letterEditor.value = data.content;
                 } else {
                     recipientInput.value = 'Not Found';
-                    letterEditor.value = 'Sorry, this letter could not be found. It may have been deleted.';
+                    letterEditor.value = 'Sorry, this letter could not be found. It may have been deleted or expired.';
                 }
             } catch (error) {
                 console.error('Error loading shared letter:', error.message);
@@ -1590,5 +2171,4 @@ Available commands:
 
     // On initial load, check for a shared letter ID in the URL
     loadSharedLetter();
-
 });
