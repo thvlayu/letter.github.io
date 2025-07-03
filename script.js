@@ -76,11 +76,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const computerWindowUser = document.querySelector('#computer-window ul li b');
     const letterHistory = document.querySelector('.letter-history');
     const letterSearchInput = document.querySelector('.letter-search');
+<<<<<<< HEAD
+=======
+    const expirationControl = document.getElementById('expiration-control');
+    const expirationSlider = document.getElementById('expiration-slider');
+    const expirationDisplay = document.getElementById('expiration-display');
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
 
     // --- Supabase Setup ---
     // IMPORTANT: Replace with your actual Supabase project URL and anon key
-    const SUPABASE_URL = 'https://gjypexdjcvhjboozatok.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdqeXBleGRqY3ZoamJvb3phdG9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEyNjEyODQsImV4cCI6MjA2NjgzNzI4NH0.N-tU8lG8uihs5I-50JRtzLnhrZtza5GQcCbW7pFIpiE';
+    const SUPABASE_URL = 'https://wfekcsjzfhcdntzhltnk.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmZWtjc2p6ZmhjZG50emhsdG5rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTEzNjMwMzIsImV4cCI6MjA2NjkzOTAzMn0.YOfngdAb-eW_zTKrreN7WgQ9kAxSOA4BoPRbdreaIGk';
     let supabase = null;
     try {
         if (window.supabase) {
@@ -118,7 +124,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let sessionInterval = null;
     let activeIcon = null; // To track which icon was right-clicked
     let authMode = 'signin'; // 'signin' or 'signup'
+<<<<<<< HEAD
     let recipientIsValid = false;
+=======
+    let recipientProfile = null; // Store the full profile of a validated recipient
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
 
     let smoother = null;
     let macTimeline = null;
@@ -335,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (sendLetterBtn) {
         sendLetterBtn.addEventListener('click', async () => {
             if (sendLetterBtn.classList.contains('sent') || sendLetterBtn.disabled) return;
+<<<<<<< HEAD
 
             // Case 1: 'To' field has a recipient. Standard send behavior.
             const recipientUsername = recipientInput.value.trim();
@@ -364,49 +375,79 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     alert('Cannot send: The specified user does not exist.');
                 }
+=======
+    
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) {
+                alert("You must be logged in to send a letter.");
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
                 return;
             }
-
-            // Case 2: 'To' field is empty. Create a shareable link via Supabase.
-            if (!supabase || SUPABASE_URL === 'YOUR_SUPABASE_URL') {
-                alert('This feature is not configured. Please set up Supabase credentials.');
-                return;
-            }
-
-            const letterContent = letterEditor.value;
-            if (!letterContent.trim()) {
+    
+            const letterContent = letterEditor.value.trim();
+            if (!letterContent) {
                 alert('Please write a letter first!');
                 return;
             }
-
+    
             sendLetterBtn.disabled = true;
-            sendLetterBtn.querySelector('.send-text').textContent = 'Saving...';
+            sendLetterBtn.querySelector('.send-text').textContent = 'Sending...';
             copyLinkBtn.classList.remove('show');
-
+    
             try {
-                const { data, error } = await supabase
+                // --- Step 1: Prepare the letter data for the database ---
+                const letterData = {
+                    sender_id: session.user.id,
+                    content: letterContent,
+                    type: dropdown.dataset.value || 'normal'
+                };
+    
+                // Determine if sending to a user or creating a public link
+                if (recipientProfile) {
+                    letterData.recipient_id = recipientProfile.id;
+                } else {
+                    // Public link, recipient_id is null. Check for expiration on normal letters.
+                    if (letterData.type === 'normal') {
+                        const hours = parseInt(expirationSlider.value, 10);
+                        const expires_at = new Date();
+                        expires_at.setHours(expires_at.getHours() + hours);
+                        letterData.expires_at = expires_at.toISOString();
+                    }
+                }
+    
+                // --- Step 2: Insert the letter into the database ---
+                const { data: insertedData, error: insertError } = await supabase
                     .from('letters')
-                    .insert([{ content: letterContent }])
+                    .insert([letterData])
                     .select()
                     .single();
-
-                if (error) throw error;
-
-                if (data) {
-                    const shareableLink = `${window.location.origin}${window.location.pathname}?id=${data.id}`;
-                    
+    
+                if (insertError) throw insertError;
+    
+                // --- Step 3: Save a copy to the user's local history for their records ---
+                const localLetter = {
+                    id: `local-${Date.now()}`,
+                    db_id: insertedData.id, // Keep a reference to the database ID
+                    recipient: recipientProfile ? recipientProfile.username : 'Shared Link',
+                    content: letterContent,
+                    timestamp: new Date().toISOString()
+                };
+                saveLetter(session.user.id, localLetter);
+                loadAndDisplayLetters(session.user.id);
+    
+                // --- Step 4: Update UI based on success ---
+                if (!recipientProfile) {
+                    // If it was a public link, show the copy button
+                    const shareableLink = `${window.location.origin}${window.location.pathname}?id=${insertedData.id}`;
                     copyLinkBtn.style.display = 'inline-block';
                     setTimeout(() => copyLinkBtn.classList.add('show'), 10);
-
                     copyLinkBtn.onclick = () => {
                         navigator.clipboard.writeText(shareableLink).then(() => {
                             copyLinkBtn.title = 'Copied!';
                             setTimeout(() => { copyLinkBtn.title = 'Copy link'; }, 2000);
-                        }).catch(err => {
-                            console.error('Failed to copy link:', err);
-                            alert('Failed to copy link.');
                         });
                     };
+<<<<<<< HEAD
 
                     sendLetterBtn.classList.add('sent');
                     sendLetterBtn.querySelector('.send-text').textContent = 'Sent';
@@ -424,17 +465,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         loadAndDisplayLetters(sessionData.session.user.id);
                     }
                     // --- End save logic ---
+=======
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
                 }
-
+    
+                // Reset UI elements
+                letterEditor.value = '';
+                recipientInput.value = '';
+                recipientInput.classList.remove('valid-user', 'invalid-user');
+                recipientProfile = null;
+    
+                sendLetterBtn.classList.add('sent');
+                sendLetterBtn.querySelector('.send-text').textContent = 'Sent';
+    
             } catch (error) {
-                console.error('Error saving letter:', error.message);
-                alert('Could not save the letter. Please check the console and your Supabase setup.');
-                sendLetterBtn.querySelector('.send-text').textContent = 'Send'; // Reset button text
+                console.error('Error sending letter:', error.message);
+                alert('Could not send the letter. Please check the console.');
             } finally {
-                // Re-enable the button after a delay, unless it was successful
-                if (!sendLetterBtn.classList.contains('sent')) {
+                // Re-enable the send button after a short delay
+                setTimeout(() => {
                     sendLetterBtn.disabled = false;
-                }
+                    sendLetterBtn.classList.remove('sent');
+                    sendLetterBtn.querySelector('.send-text').textContent = 'Send';
+                }, 2000);
             }
         });
     }
@@ -453,7 +506,11 @@ document.addEventListener('DOMContentLoaded', () => {
     async function checkUsername(username) {
         if (!username) {
             recipientInput.classList.remove('valid-user', 'invalid-user');
+<<<<<<< HEAD
             recipientIsValid = false;
+=======
+            recipientProfile = null;
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
             return;
         }
 
@@ -473,18 +530,30 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data) {
                 recipientInput.classList.add('valid-user');
                 recipientInput.classList.remove('invalid-user');
+<<<<<<< HEAD
                 recipientIsValid = true;
             } else {
                 recipientInput.classList.add('invalid-user');
                 recipientInput.classList.remove('valid-user');
                 recipientIsValid = false;
+=======
+                recipientProfile = { id: data.id, username: username };
+            } else {
+                recipientInput.classList.add('invalid-user');
+                recipientInput.classList.remove('valid-user');
+                recipientProfile = null;
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
             }
 
         } catch (error) {
             console.error("Error checking username:", error.message);
             recipientInput.classList.add('invalid-user');
             recipientInput.classList.remove('valid-user');
+<<<<<<< HEAD
             recipientIsValid = false;
+=======
+            recipientProfile = null;
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
         }
     }
 
@@ -663,6 +732,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Letter Saving and Searching Logic ---
 
+<<<<<<< HEAD
+=======
+    // Fetches profiles from a list of IDs to avoid multiple single queries.
+    // Also uses a simple cache to prevent re-fetching the same profile in a session.
+    const profileCache = new Map();
+    async function getProfilesByIds(ids) {
+        const idsToFetch = ids.filter(id => id && !profileCache.has(id));
+        if (idsToFetch.length > 0) {
+            const { data, error } = await supabase.from('profiles').select('id, username').in('id', idsToFetch);
+            if (error) {
+                console.error("Error fetching profiles:", error);
+                return;
+            }
+            data.forEach(profile => profileCache.set(profile.id, profile));
+        }
+    }
+
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
     function getSavedLetters(userId) {
         if (!userId) return [];
         const lettersJSON = localStorage.getItem(`web-os-letters-${userId}`);
@@ -676,6 +763,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem(`web-os-letters-${userId}`, JSON.stringify(letters));
     }
 
+<<<<<<< HEAD
     function renderLetters(letters) {
         if (!letterHistory) return;
         letterHistory.innerHTML = ''; // Clear current list
@@ -685,21 +773,66 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+=======
+    async function renderLetters(letters, currentUserId) {
+        if (!letterHistory) return;
+        letterHistory.innerHTML = ''; // Clear current list
+
+        if (!letters || letters.length === 0) {
+            letterHistory.innerHTML = '<p style="padding: 10px; text-align: center; color: #888; font-size: 12px;">No mail yet.</p>';
+            return;
+        }
+
+        // We need usernames for senders/recipients. Fetch them in one go.
+        const profileIds = new Set();
+        letters.forEach(letter => {
+            if (letter.sender_id) profileIds.add(letter.sender_id);
+            if (letter.recipient_id) profileIds.add(letter.recipient_id);
+        });
+
+        await getProfilesByIds(Array.from(profileIds));
+
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
         letters.forEach(letter => {
             const preview = letter.content ? letter.content.substring(0, 35) + (letter.content.length > 35 ? '...' : '') : 'No content';
             const item = document.createElement('div');
             item.className = 'letter-item';
+<<<<<<< HEAD
             item.dataset.id = letter.id;
             item.innerHTML = `
                 <div class="letter-item-sender">${letter.recipient}</div>
                 <div class="letter-item-preview">${preview}</div>
                 <div class="letter-item-date">${new Date(letter.timestamp).toLocaleDateString()}</div>
+=======
+            item.dataset.id = letter.id; // Use database ID
+
+            const isSent = letter.sender_id === currentUserId;
+            let otherPartyUsername = 'Unknown';
+            if (isSent) {
+                const recipientProfile = letter.recipient_id ? profileCache.get(letter.recipient_id) : null;
+                otherPartyUsername = recipientProfile ? `To: ${recipientProfile.username}` : 'Public Link';
+            } else {
+                const senderProfile = letter.sender_id ? profileCache.get(letter.sender_id) : null;
+                otherPartyUsername = senderProfile ? `From: ${senderProfile.username}` : 'System';
+            }
+            
+            // Add a class if the letter is unread (a simple example, can be improved)
+            if (!isSent && !letter.read) { // 'read' property would need to be added to DB
+                 item.classList.add('unread');
+            }
+
+            item.innerHTML = `
+                <div class="letter-item-sender">${otherPartyUsername}</div>
+                <div class="letter-item-preview">${preview}</div>
+                <div class="letter-item-date">${new Date(letter.created_at).toLocaleDateString()}</div>
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
             `;
             letterHistory.appendChild(item);
         });
     }
 
     async function loadAndDisplayLetters(userId, searchTerm = '') {
+<<<<<<< HEAD
         const letters = getSavedLetters(userId);
         let filteredLetters = letters;
 
@@ -712,6 +845,35 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         renderLetters(filteredLetters);
+=======
+        if (!supabase || !userId) return;
+
+        let letters = [];
+        if (searchTerm) {
+            // Use the database function for searching
+            const { data, error } = await supabase.rpc('search_letters', { search_term: searchTerm });
+            if (error) {
+                console.error("Error searching letters:", error);
+                return;
+            }
+            letters = data;
+        } else {
+            // Fetch all letters for the user (sent and received)
+            const { data, error } = await supabase
+                .from('letters')
+                .select('*')
+                .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error("Error fetching letters:", error);
+                return;
+            }
+            letters = data;
+        }
+        
+        await renderLetters(letters, userId);
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
     }
 
     if (letterSearchInput) {
@@ -734,6 +896,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     updateUIForAuthState(session, profile);
                     loadAndDisplayLetters(session.user.id); // Load letters on login
                     // Show expiration control if default is 'normal'
+<<<<<<< HEAD
+=======
+                    if (document.getElementById('letter-type-dropdown').dataset.value === 'normal') {
+                         if (expirationControl) expirationControl.style.display = 'flex';
+                    }
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
                     closeAllModals();
                 } else {
                     // New user, needs to choose a username
@@ -1780,7 +1948,31 @@ Available commands:
                 
                 setDropdownValue(dropdownItems[nextIndex], true, direction);
 
+<<<<<<< HEAD
             }, { passive: false });
+=======
+                // Toggle expiration control visibility
+                if (dropdownItems[nextIndex].dataset.value === 'normal') {
+                    gsap.to(expirationControl, { autoAlpha: 1, display: 'flex', duration: 0.3 });
+                } else {
+                    gsap.to(expirationControl, { autoAlpha: 0, display: 'none', duration: 0.3 });
+                }
+
+            }, { passive: false });
+        }
+
+        // --- Expiration Slider Logic ---
+        if (expirationSlider && expirationDisplay) {
+            expirationSlider.addEventListener('input', (e) => {
+                const hours = e.target.value;
+                if (hours < 24) {
+                    expirationDisplay.textContent = `${hours} hour${hours > 1 ? 's' : ''}`;
+                } else {
+                    const days = Math.floor(hours / 24);
+                    expirationDisplay.textContent = `${days} day${days > 1 ? 's' : ''}`;
+                }
+            });
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
         }
 
         // Account Popup Logic
@@ -1816,6 +2008,7 @@ Available commands:
                 clickedItem.classList.add('active');
                 
                 // --- Load clicked letter content into editor ---
+<<<<<<< HEAD
                 const { data: { session } } = supabase.auth.getSession();
                 if (session) {
                     const letters = getSavedLetters(session.user.id);
@@ -1834,6 +2027,9 @@ Available commands:
                         }
                     }
                 }
+=======
+                loadSelectedLetter(clickedItem.dataset.id);
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
             });
         }
         
@@ -1869,6 +2065,60 @@ Available commands:
         const tempoSlider = document.getElementById('tempo-slider');
         const tempoDisplay = document.getElementById('tempo-display');
         let playhead;
+
+        async function loadSelectedLetter(letterId) {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) return;
+        
+            const { data: selectedLetter, error } = await supabase
+                .from('letters')
+                .select('*')
+                .eq('id', letterId)
+                .single();
+        
+            if (error && error.code !== 'PGRST116') {
+                 console.error("Error fetching selected letter:", error);
+                 return;
+            }
+            
+            if (!selectedLetter) {
+                // Letter might not be in the DB (e.g., a secret one that was deleted)
+                // but we can try to load it from our local archive.
+                const localLetters = getSavedLetters(session.user.id);
+                const localVersion = localLetters.find(l => l.db_id === letterId);
+                if (localVersion) {
+                    recipientInput.value = localVersion.recipient === 'Shared Link' ? '' : localVersion.recipient;
+                    editor.value = localVersion.content;
+                } else {
+                    editor.value = 'This letter is no longer available.';
+                }
+                return;
+            }
+        
+            // We have the letter from the database
+            const isRecipient = selectedLetter.recipient_id === session.user.id;
+
+            // Display the content
+            editor.value = selectedLetter.content;
+            let titleText = 'Letter';
+
+            // If it's a secret letter and the current user is the recipient, handle deletion
+            if (isRecipient && selectedLetter.type === 'secret') {
+                titleText = 'Secret Letter (will be destroyed)';
+                
+                // Delete from DB, then refresh the inbox view
+                await supabase.from('letters').delete().eq('id', letterId);
+                
+                // Also remove it from the local history archive if it exists there
+                const localLetters = getSavedLetters(session.user.id);
+                const updatedLocalLetters = localLetters.filter(l => l.db_id !== letterId);
+                localStorage.setItem(`web-os-letters-${session.user.id}`, JSON.stringify(updatedLocalLetters));
+
+                // Refresh the list
+                loadAndDisplayLetters(session.user.id);
+            }
+            letterWindow.querySelector('.title').textContent = titleText;
+        }
 
         function initChiptuneComposer() {
             if (!gridContainer || gridContainer.childElementCount > 0) return;
@@ -2062,5 +2312,4 @@ Available commands:
 
     // On initial load, check for a shared letter ID in the URL
     loadSharedLetter();
-
 });

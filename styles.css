@@ -815,6 +815,22 @@ a:focus {
     position: relative;
 }
 
+<<<<<<< HEAD
+=======
+#expiration-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #ccc;
+    font-size: 13px;
+}
+
+#expiration-control input[type="range"] {
+    width: 100px;
+    cursor: pointer;
+}
+
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
 .custom-dropdown {
     position: relative;
 }
@@ -1636,7 +1652,11 @@ input:checked + .slider:before {
     border: 1px solid #555;
     border-radius: 8px;
     padding: 12px;
+<<<<<<< HEAD
     color: #f0f0f0;
+=======
+    color: white;
+>>>>>>> a7f5f80724815789329e3e1d487b5032a0fa4533
     font-size: 16px;
     text-align: center;
 }
