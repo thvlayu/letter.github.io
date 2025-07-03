@@ -760,6 +760,7 @@ a:focus {
 #user-account-btn {
     background: transparent !important;
     border: none !important;
+    transform: translateY(-9px) !important; /* Nudge icon up for better alignment */
 }
 
 .recipient-input {
@@ -770,6 +771,15 @@ a:focus {
     border-radius: 8px;
     color: white;
     font-size: 14px;
+    transition: color 0.3s ease, border-color 0.3s ease;
+}
+.recipient-input.valid-user {
+    color: #50fa7b; /* Green */
+    border-color: #50fa7b;
+}
+.recipient-input.invalid-user {
+    color: #ff5f56; /* Red */
+    border-color: #ff5f56;
 }
 .recipient-input::placeholder { color: #aaa; }
 
@@ -793,6 +803,18 @@ a:focus {
     align-items: center;
 }
 
+.composer-actions-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.composer-actions-right {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
 .custom-dropdown {
     position: relative;
 }
@@ -802,16 +824,22 @@ a:focus {
     border: 1px solid #444;
     color: #f0f0f0;
     padding: 8px 12px;
-    border-radius: 8px;
+    border-radius: 14px !important;
     cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
+    min-width: 135px !important;
     font-size: 14px;
+    position: relative;
+    overflow: hidden;
 }
 .dropdown-toggle:hover {
     background-color: #383838;
+}
+.dropdown-toggle span {
+    display: inline-block;
 }
 .dropdown-toggle .chevron-icon {
     width: 16px;
@@ -877,6 +905,41 @@ a:focus {
 }
 .account-popup .close-popup-btn {
     align-self: flex-end;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    color: #aaa;
+    font-size: 20px;
+    cursor: pointer;
+}
+.account-popup-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+.account-action-btn {
+    flex-grow: 1;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    cursor: pointer;
+    border: 1px solid #555;
+    background: #3a3a3a;
+    color: #f0f0f0;
+    transition: background-color 0.2s;
+}
+.account-action-btn.primary, #popup-logout-btn {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
+}
+.account-action-btn:hover {
+    background-color: #4a4a4a;
+}
+.account-action-btn.primary:hover {
+    background-color: color-mix(in srgb, var(--accent-color) 85%, black);
 }
 
 
@@ -1494,4 +1557,122 @@ input:checked + .slider:before {
 
 #copy-link-btn:hover {
     color: #fff;
+}
+
+/* --- Auth Modals --- */
+.modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    z-index: 1001; /* Above other windows */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: rgba(40, 40, 40, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 30px;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    color: #f0f0f0;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #aaa;
+    font-size: 24px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 5px;
+}
+.modal-close-btn:hover {
+    color: white;
+}
+
+.auth-modal-content .auth-icon {
+    margin-bottom: 10px;
+}
+
+.modal-content h3 {
+    margin: 0 0 5px 0;
+    font-size: 24px;
+}
+
+.modal-content p {
+    margin: 0 0 10px 0;
+    color: #ccc;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.modal-content form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.modal-content input[type="email"],
+.modal-content input[type="password"],
+.modal-content input[type="text"] {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #555;
+    border-radius: 8px;
+    padding: 12px;
+    color: #f0f0f0;
+    font-size: 16px;
+    text-align: center;
+}
+.modal-content input:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 10px color-mix(in srgb, var(--accent-color) 30%, transparent);
+}
+
+.modal-content button[type="submit"] {
+    background: #0078d4;
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.modal-content button[type="submit"]:hover {
+    background-color: #005a9e;
+}
+
+#auth-toggle-text {
+    font-size: 14px;
+}
+#auth-toggle-text a {
+    color: #009dff;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.error-message {
+    color: #ff5f56;
+    font-size: 14px;
+    margin-top: 10px;
+    min-height: 20px; /* Prevent layout shift */
 }
